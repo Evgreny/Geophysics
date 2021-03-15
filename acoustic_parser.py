@@ -242,8 +242,8 @@ def acoustic_full():
             print(skv+" данные по акустике добавлены")
         except Exception as error:
             print(f"В папке {skv} аккустика не взялась")
-    DatasetAcoustic.replace("52F", "52р", inplace=True)
-    DatasetAcoustic.replace("111F", "111по", inplace=True)
+    DatasetAcoustic.replace("52A", "52р", inplace=True)
+    DatasetAcoustic.replace("111A", "111по", inplace=True)
 
     return DatasetAcoustic
 
@@ -252,3 +252,29 @@ def acoustic_full():
 Acoustic = acoustic_full()
 Acoustic.to_excel("AcousticDataset.xlsx", index = False)
 print("Датасет по акустике создан")
+
+
+def gamma_full():
+    """Функция принимает путь к папке месторождения.
+    Возвращает объединенный датафрейм файлов гаммы."""
+    DatasetGamma = pd.DataFrame()
+    for skv in SUBLEVEL_2:
+        try:
+            ac_path, g_path, m_path = file_search(skv)
+            gamma_df = get_data_acg(g_path)
+            gamma_df = rename_headers(gamma_df, "gamma", g_path)
+            gamma_df = clean_data(gamma_df, ac_path)
+            gamma_df["G_wellName"] = skv.split("\\")[-1]
+            DatasetGamma = pd.concat([DatasetGamma, gamma_df])
+            print(skv+" данные по гамме добавлены")
+        except Exception as error:
+            print(f"В папке {skv} гамма не взялась")
+    DatasetGamma.replace("65G", "65по", inplace=True)
+
+    return DatasetGamma
+
+
+# Создаёт объединенный датафрейм гаммы
+Gamma = gamma_full()
+Gamma.to_excel("GammaDataset.xlsx", index = False)
+print("Датасет по гамме создан")
