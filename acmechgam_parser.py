@@ -143,6 +143,74 @@ def get_data_acg(path):
         return None
 
 
+def get_data_mech(path):
+    """Функция принимает путь к файлу механики.
+    Возвращает датафрейм с данными из этого файла.
+    Если не удалось извлечь данные, возвращает None."""
+    try:
+        cols = [
+            "Месторождение",
+            "Пласт",
+            "Глубина отбора по ГИС, м",
+            "Литология",
+            "Номер образца",
+            "Пористость, %",
+            "Газопроницаемость, мД",
+            "Плотность скелета, г/см3",
+            "Статический Модуль Юнга, ГПа",
+            "Коэффициент сжимаемости твердых частиц (β), ГПа-1",
+            "Статический Коэфф. Пуассона",
+        ]
+        m_df = pd.DataFrame(columns=cols)
+        wb = xlrd.open_workbook(filename=path)
+        sheets_list = wb.sheet_names()
+        for label in sheets_list:
+            sheet = wb.sheet_by_name(label)
+            if sheet.cell_value(0, 0) == "Привязка керна":
+            #     continue
+            # else:
+                for i in [9, 10, 12, 15]:
+                    if (
+                        i <= sheet.nrows - 2
+                        and sheet.cell_value(i, 0) == "Модуль Юнга (Ест), ГПа"
+                    ):
+                        new_row = dict()
+                        mech_df = pd.read_excel(path, sheet_name=label, header=None)
+                        # Выбираем строки, содержащие таблицы с 5 и 4 столбцами:
+                        mech_df.dropna(thresh=4, inplace=True)
+                        # Извлекаем значения из таблицы с 5 столбцами:
+                        new_row["Месторождение"] = mech_df.iloc[1, 0]
+                        new_row["Пласт"] = mech_df.iloc[1, 2]
+                        new_row["Глубина отбора по ГИС, м"] = mech_df.iloc[1, 3]
+                        new_row["Литология"] = mech_df.iloc[1, 5]
+                        # Извлекаем значения из таблицы с 4 столбцами:
+                        new_row["Номер образца"] = mech_df.iloc[3, 0]
+                        new_row["Пористость, %"] = mech_df.iloc[3, 1]
+                        new_row["Газопроницаемость, мД"] = mech_df.iloc[3, 3]
+                        new_row["Плотность скелета, г/см3"] = mech_df.iloc[3, 5]
+                        # Извлекаем значения из вертикальной таблицы:
+                        new_row["Статический Модуль Юнга, ГПа"] = sheet.cell_value(i, 5)
+                        new_row[
+                            "Коэффициент сжимаемости твердых частиц (β), ГПа-1"
+                        ] = sheet.cell_value(i + 1, 5)
+                        new_row["Статический Коэфф. Пуассона"] = sheet.cell_value(
+                            i + 2, 5
+                        )
+                        m_df = m_df.append(new_row, ignore_index=True)
+        m_df["mechanic_path"] = path
+        m_df["mechanic_file"] = os.path.basename(path)
+        if len(m_df) > 0:
+            m_df = m_df.add_prefix("M_")
+            return m_df
+        else:
+            print(f"Не удалось сформировать датасет по механике из файла \n{path}")
+            return None
+    except Exception as error:
+        print(f"В файле {path}")
+        print("Ошибка при вызове функции get_data_mech():", error)
+        return None
+
+
 def rename_headers(data_frame, df_type, path):
     """Функция принимает датафрейм, тип данных ('acoustic', 'gamma') и путь к файлу.
     Возвращает датафрейм с переименованными заголовками.
@@ -249,9 +317,9 @@ def acoustic_full():
 
 
 # Создает объединенный датафрейм акустики
-Acoustic = acoustic_full()
-Acoustic.to_excel("AcousticDataset.xlsx", index = False)
-print("Датасет по акустике создан")
+# Acoustic = acoustic_full()
+# Acoustic.to_excel("AcousticDataset.xlsx", index = False)
+# print("Датасет по акустике создан")
 
 
 def gamma_full():
@@ -275,6 +343,31 @@ def gamma_full():
 
 
 # Создаёт объединенный датафрейм гаммы
-Gamma = gamma_full()
-Gamma.to_excel("GammaDataset.xlsx", index = False)
-print("Датасет по гамме создан")
+# Gamma = gamma_full()
+# Gamma.to_excel("GammaDataset.xlsx", index = False)
+# print("Датасет по гамме создан")
+
+
+def mech_full():
+    """Функция принимает путь к папке месторождения.
+    Возвращает объединенный датафрейм файлов механики."""
+    DatasetMech = pd.DataFrame()
+    for skv in SUBLEVEL_2:
+        try:
+            ac_path, g_path, m_path = file_search(skv)
+            if "65по" in m_path:
+                mech_df = pd.read_excel(m_path)
+            else:
+                mech_df = get_data_mech(m_path)
+            mech_df["M_wellName"] = skv.split("\\")[-1]
+            DatasetMech = pd.concat([DatasetMech, mech_df])
+            print(skv+" данные по механике добавлены")
+        except Exception as error:
+            print(f"В папке {skv} механика не взялась")
+
+    return DatasetMech
+
+# Создаёт объединенный датафрейм механики
+Mech = mech_full()
+Mech.to_excel("MechDataset.xlsx", index = False)
+print("Датасет по механике создан")
