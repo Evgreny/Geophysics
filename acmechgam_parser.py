@@ -82,13 +82,6 @@ def file_search(path):
                         g_path = cur_path
                     elif name.find("еханик") > -1 and name.find("~") == -1:
                         m_path = cur_path
-    # if ac_path is None or g_path is None or m_path is None:
-    #     if ac_path is None:
-    #         print("\tНе найдены данные по акустике.")
-    #     if g_path is None:
-    #         print("\tНе найдены данные по гамме.")
-    #     if m_path is None:
-    #         print("\tНе найдены данные по механике.")
     return ac_path, g_path, m_path
 
 
@@ -312,14 +305,16 @@ def acoustic_full():
             print(f"В папке {skv} аккустика не взялась")
     DatasetAcoustic.replace("52A", "52р", inplace=True)
     DatasetAcoustic.replace("111A", "111по", inplace=True)
-
+    DatasetAcoustic["A_Глубина отбора по бурению, м"] = (
+            DatasetAcoustic["A_Интервал отбора кровля, м"] + DatasetAcoustic["A_Место взятия от верха, м"])
+    DatasetAcoustic["A_Глубина отбора по бурению, м"] = DatasetAcoustic["A_Глубина отбора по бурению, м"].round(1)
     return DatasetAcoustic
 
 
 # Создает объединенный датафрейм акустики
-# Acoustic = acoustic_full()
-# Acoustic.to_excel("AcousticDataset.xlsx", index = False)
-# print("Датасет по акустике создан")
+Acoustic = acoustic_full()
+Acoustic.to_excel("AcousticDataset.xlsx", index = False)
+print("Датасет по акустике создан")
 
 
 def gamma_full():
@@ -331,21 +326,42 @@ def gamma_full():
             ac_path, g_path, m_path = file_search(skv)
             gamma_df = get_data_acg(g_path)
             gamma_df = rename_headers(gamma_df, "gamma", g_path)
-            gamma_df = clean_data(gamma_df, ac_path)
-            gamma_df["G_wellName"] = skv.split("\\")[-1]
+            gamma_df = clean_data(gamma_df, g_path)
+            wellName = skv.split("\\")[-1]
+            gamma_df["G_wellName"] = wellName
+            try:
+                # if wellName == "52р":
+                if wellName in ["52р", "60", "61", "65по", "65G"]:
+
+                    gamma_df["G_Глубина отбора по ГИС, м"] = (
+                    gamma_df["G_Интервал отбора керна после привязки кровля, м"]
+                    + gamma_df["G_Глубина отбора по ГИС, м"])
+
+                    if wellName == "52р":
+                        gamma_df["G_Глубина отбора по бурению, м"] = (
+                                gamma_df["G_Интервал отбора керна до привязки кровля, м"]
+                                + gamma_df["G_Вынос керна, м"])
+                    else:
+                        gamma_df["G_Глубина отбора по бурению, м"] = np.nan
+
+                    print(f"----------------------------------В файле {g_path} исправлена глубина по бурению и по ГИС.")
+            except Exception as error:
+                print(f"----------------------------------В файле {g_path} ошибка по глубине")
+
             DatasetGamma = pd.concat([DatasetGamma, gamma_df])
             print(skv+" данные по гамме добавлены")
         except Exception as error:
             print(f"В папке {skv} гамма не взялась")
     DatasetGamma.replace("65G", "65по", inplace=True)
 
+    DatasetGamma["G_Глубина отбора по бурению, м"] = DatasetGamma["G_Глубина отбора по бурению, м"].round(1)
     return DatasetGamma
 
 
 # Создаёт объединенный датафрейм гаммы
-# Gamma = gamma_full()
-# Gamma.to_excel("GammaDataset.xlsx", index = False)
-# print("Датасет по гамме создан")
+Gamma = gamma_full()
+Gamma.to_excel("GammaDataset.xlsx", index = False)
+print("Датасет по гамме создан")
 
 
 def mech_full():
