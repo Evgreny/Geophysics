@@ -41,7 +41,9 @@ for well in inter:
         AG_Dataset = pd.concat([AG_Dataset, AG_well])
 
     else:
-        AG_Dataset = pd.concat([AG_Dataset, Acoustic[Acoustic["A_wellName"] == well]])
+        AG_well = Acoustic[Acoustic["A_wellName"] == well]
+        AG_well = AG_well.assign(AG_Depth=AG_well["A_Глубина отбора по бурению, м"])
+        AG_Dataset = pd.concat([AG_Dataset, AG_well])
 
 for well in Adiff:
      AG_well = Acoustic[Acoustic["A_wellName"] == well]
