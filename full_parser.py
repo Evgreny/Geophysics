@@ -79,7 +79,8 @@ def acoustic_gamma_merge():
     print(AG_Dataset.info())
     return AG_Dataset
 
-# acoustic_gamma_merge()
+acoustic_gamma_merge()
+
 
 def acoustgamma_strength_merge():
     AcoustGamma = pd.read_excel("AcoustGammaDataset.xlsx")
@@ -102,11 +103,44 @@ def acoustgamma_strength_merge():
     AGS_Dataset.reset_index(inplace=True, drop=True)
     wellNull = AGS_Dataset.loc[AGS_Dataset["wellName"].isna()].index
     AGS_Dataset.loc[wellNull, "wellName"] = AGS_Dataset.loc[wellNull, "S_wellName"]
-    # AGS_Dataset.drop(columns=["index"], inplace=True)
+    AGS_Dataset.drop(columns=["S_wellName"], inplace=True)
     print(AGS_Dataset.groupby("wellName").describe())
     print(AGS_Dataset.info())
     AGS_Dataset.to_excel("AcoustGammaStrengthDataset.xlsx", index=False)
 
     return AGS_Dataset
 
-# acoustgamma_strength_merge()
+acoustgamma_strength_merge()
+
+def acgamstr_mech_merge():
+    AcGamStr = pd.read_excel("AcoustGammaStrengthDataset.xlsx")
+    Mech = pd.read_excel("MechDataset.xlsx")
+    AGS_Wells = AcGamStr["wellName"].unique()
+    M_Wells = Mech["M_wellName"].unique()
+    inter = list(set(AGS_Wells).intersection(set(M_Wells)))
+    AGdiff = list(set(AGS_Wells).difference(set(M_Wells)))
+    AGSM_Dataset = pd.DataFrame()
+    for well in inter:
+        print(well)
+        AGSM_well = AcGamStr[AcGamStr["wellName"] == well]
+        AGSM_well = pd.merge(AGSM_well, Mech[Mech["M_wellName"] == well],
+                            how="outer", left_on="G_Глубина отбора по ГИС, м", right_on="M_Глубина отбора по ГИС, м", )
+        AGSM_Dataset = pd.concat([AGSM_Dataset, AGSM_well])
+    for well in AGdiff:
+        AGSM_well = AcGamStr[AcGamStr["wellName"] == well]
+        AGSM_Dataset = pd.concat([AGSM_Dataset, AGSM_well])
+
+    AGSM_Dataset.reset_index(inplace=True, drop=True)
+    # wellNull = AGS_Dataset.loc[AGS_Dataset["wellName"].isna()].index
+    # AGS_Dataset.loc[wellNull, "wellName"] = AGS_Dataset.loc[wellNull, "S_wellName"]
+    # AGS_Dataset.drop(columns=["index"], inplace=True)
+    # print(AGSM_Dataset.groupby("wellName").describe())
+    wellNull = AGSM_Dataset.loc[AGSM_Dataset["wellName"].isna()].index
+    AGSM_Dataset.loc[wellNull, "wellName"] = AGSM_Dataset.loc[wellNull, "M_wellName"]
+    AGSM_Dataset.drop(columns=["M_wellName"], inplace=True)
+    print(AGSM_Dataset.groupby("wellName").describe())
+    AGSM_Dataset.to_excel("FullKern.xlsx", index=False)
+
+    return AGSM_Dataset
+
+acgamstr_mech_merge()

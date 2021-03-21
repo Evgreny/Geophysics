@@ -355,6 +355,7 @@ def gamma_full():
     DatasetGamma.replace("65G", "65по", inplace=True)
 
     DatasetGamma["G_Глубина отбора по бурению, м"] = DatasetGamma["G_Глубина отбора по бурению, м"].round(1)
+    DatasetGamma["G_Глубина отбора по ГИС, м"] = DatasetGamma["G_Глубина отбора по ГИС, м"].round(1)
     return DatasetGamma
 
 
@@ -380,6 +381,8 @@ def mech_full():
             print(skv+" данные по механике добавлены")
         except Exception as error:
             print(f"В папке {skv} механика не взялась")
+
+    DatasetMech["M_Глубина отбора по ГИС, м"] = DatasetMech["M_Глубина отбора по ГИС, м"].round(1)
 
     return DatasetMech
 
