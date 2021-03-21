@@ -608,6 +608,7 @@ def str_full():
             print(f"В папке {well} прочность не взялась")
 
     DatasetStr.dropna(axis="columns", how="all", inplace=True)
+    DatasetStr["S_Глубина отбора по бурению, м"] = DatasetStr["S_Глубина отбора по бурению, м"].round(1)
     return DatasetStr
 
 # Создаёт объединенный датафрейм прочности

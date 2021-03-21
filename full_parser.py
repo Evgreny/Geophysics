@@ -69,13 +69,44 @@ def acoustic_gamma_merge():
 
     AG_Dataset.drop_duplicates(inplace=True)
 
-    AG_Dataset.reset_index(inplace=True)
+    AG_Dataset.reset_index(inplace=True, drop=True)
     AG_Dataset = AG_Dataset.assign(wellName=AG_Dataset["G_wellName"])
     wellNull = AG_Dataset.loc[AG_Dataset["wellName"].isna()].index
     AG_Dataset.loc[wellNull, "wellName"] = AG_Dataset.loc[wellNull, "A_wellName"]
-    AG_Dataset.drop(columns = ["G_wellName", "A_wellName", "index"], inplace=True)
+    AG_Dataset.drop(columns = ["G_wellName", "A_wellName"], inplace=True)
     AG_Dataset.to_excel("AcoustGammaDataset.xlsx", index=False)
     # print(AG_Dataset.groupby("wellName").describe())
     print(AG_Dataset.info())
+    return AG_Dataset
 
-acoustic_gamma_merge()
+# acoustic_gamma_merge()
+
+def acoustgamma_strength_merge():
+    AcoustGamma = pd.read_excel("AcoustGammaDataset.xlsx")
+    Strenght = pd.read_excel("StrengthDataset.xlsx")
+    AG_Wells = AcoustGamma["wellName"].unique()
+    S_Wells = Strenght["S_wellName"].unique()
+    inter = list(set(AG_Wells).intersection(set(S_Wells)))
+    AGdiff = list(set(AG_Wells).difference(set(S_Wells)))
+    AGS_Dataset = pd.DataFrame()
+    for well in inter:
+        print(well)
+        AGS_well = AcoustGamma[AcoustGamma["wellName"] == well]
+        AGS_well = pd.merge(AGS_well, Strenght[Strenght["S_wellName"] == well],
+                            how="outer", left_on="AG_Depth", right_on="S_Глубина отбора по бурению, м", )
+        AGS_Dataset = pd.concat([AGS_Dataset, AGS_well])
+    for well in AGdiff:
+        AGS_well = AcoustGamma[AcoustGamma["wellName"] == well]
+        AGS_Dataset = pd.concat([AGS_Dataset, AGS_well])
+
+    AGS_Dataset.reset_index(inplace=True, drop=True)
+    wellNull = AGS_Dataset.loc[AGS_Dataset["wellName"].isna()].index
+    AGS_Dataset.loc[wellNull, "wellName"] = AGS_Dataset.loc[wellNull, "S_wellName"]
+    # AGS_Dataset.drop(columns=["index"], inplace=True)
+    print(AGS_Dataset.groupby("wellName").describe())
+    print(AGS_Dataset.info())
+    AGS_Dataset.to_excel("AcoustGammaStrengthDataset.xlsx", index=False)
+
+    return AGS_Dataset
+
+# acoustgamma_strength_merge()
