@@ -18,9 +18,7 @@ def acoustic_gamma_merge():
     G_Wells = Gamma["G_wellName"].unique()
     inter = list(set(A_Wells).intersection(set(G_Wells)))
     Adiff = list(set(A_Wells).difference(set(G_Wells)))
-    print(Adiff)
     Gdiff = list(set(G_Wells).difference(set(A_Wells)))
-    print(Gdiff)
     AG_Dataset = pd.DataFrame()
     for well in inter:
         print(well)
@@ -32,7 +30,6 @@ def acoustic_gamma_merge():
             if well == "52р":
                 AG_well = Gamma[Gamma["G_wellName"] == well]
                 AG_well = AG_well.assign(AG_Depth=AG_well["G_Глубина отбора по бурению, м"])
-                print(G_DepthDiff)
                 AG_well = pd.merge(AG_well, Acoustic[Acoustic["A_wellName"] == well],
                                    how="outer", left_on="AG_Depth", right_on="A_Глубина отбора по бурению, м", )
                 ind = AG_well.loc[AG_well["AG_Depth"].isna()].index
@@ -71,7 +68,14 @@ def acoustic_gamma_merge():
         AG_Dataset = pd.concat([AG_Dataset, AG_well])
 
     AG_Dataset.drop_duplicates(inplace=True)
+
+    AG_Dataset.reset_index(inplace=True)
+    AG_Dataset = AG_Dataset.assign(wellName=AG_Dataset["G_wellName"])
+    wellNull = AG_Dataset.loc[AG_Dataset["wellName"].isna()].index
+    AG_Dataset.loc[wellNull, "wellName"] = AG_Dataset.loc[wellNull, "A_wellName"]
+    AG_Dataset.drop(columns = ["G_wellName", "A_wellName", "index"], inplace=True)
     AG_Dataset.to_excel("AcoustGammaDataset.xlsx", index=False)
-    print(AG_Dataset.groupby("G_wellName").describe())
+    # print(AG_Dataset.groupby("wellName").describe())
+    print(AG_Dataset.info())
 
 acoustic_gamma_merge()
