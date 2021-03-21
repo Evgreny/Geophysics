@@ -311,12 +311,6 @@ def acoustic_full():
     return DatasetAcoustic
 
 
-# Создает объединенный датафрейм акустики
-Acoustic = acoustic_full()
-Acoustic.to_excel("AcousticDataset.xlsx", index = False)
-print("Датасет по акустике создан")
-
-
 def gamma_full():
     """Функция принимает путь к папке месторождения.
     Возвращает объединенный датафрейм файлов гаммы."""
@@ -359,12 +353,6 @@ def gamma_full():
     return DatasetGamma
 
 
-# Создаёт объединенный датафрейм гаммы
-Gamma = gamma_full()
-Gamma.to_excel("GammaDataset.xlsx", index = False)
-print("Датасет по гамме создан")
-
-
 def mech_full():
     """Функция принимает путь к папке месторождения.
     Возвращает объединенный датафрейм файлов механики."""
@@ -385,8 +373,3 @@ def mech_full():
     DatasetMech["M_Глубина отбора по ГИС, м"] = DatasetMech["M_Глубина отбора по ГИС, м"].round(1)
 
     return DatasetMech
-
-# Создаёт объединенный датафрейм механики
-Mech = mech_full()
-Mech.to_excel("MechDataset.xlsx", index = False)
-print("Датасет по механике создан")

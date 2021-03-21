@@ -4,12 +4,16 @@ import copy
 import xlrd
 import numpy as np
 import pandas as pd
+import acmechgam_parser
+import strength_parser
+
 
 pd.set_option("display.max_columns", 101)
 pd.options.display.max_columns = 999
 pd.set_option("display.max_rows", 100)
 pd.set_option("display.width", 1000)
 pd.set_option("max_colwidth", 800)
+
 
 def acoustic_gamma_merge():
     Acoustic = pd.read_excel("AcousticDataset.xlsx")
@@ -46,7 +50,6 @@ def acoustic_gamma_merge():
                                    how="outer", left_on="AG_Depth", right_on="A_Глубина отбора по бурению, м", )
                 AG_well = pd.merge(AG_well, Gamma[Gamma["G_wellName"] == well],
                                    how="outer", left_on="AG_Depth", right_on="G_Глубина отбора по бурению, м", )
-
             AG_Dataset = pd.concat([AG_Dataset, AG_well])
 
         else:
@@ -68,18 +71,13 @@ def acoustic_gamma_merge():
         AG_Dataset = pd.concat([AG_Dataset, AG_well])
 
     AG_Dataset.drop_duplicates(inplace=True)
-
     AG_Dataset.reset_index(inplace=True, drop=True)
     AG_Dataset = AG_Dataset.assign(wellName=AG_Dataset["G_wellName"])
     wellNull = AG_Dataset.loc[AG_Dataset["wellName"].isna()].index
     AG_Dataset.loc[wellNull, "wellName"] = AG_Dataset.loc[wellNull, "A_wellName"]
     AG_Dataset.drop(columns = ["G_wellName", "A_wellName"], inplace=True)
-    AG_Dataset.to_excel("AcoustGammaDataset.xlsx", index=False)
-    # print(AG_Dataset.groupby("wellName").describe())
-    print(AG_Dataset.info())
-    return AG_Dataset
 
-acoustic_gamma_merge()
+    return AG_Dataset
 
 
 def acoustgamma_strength_merge():
@@ -91,7 +89,6 @@ def acoustgamma_strength_merge():
     AGdiff = list(set(AG_Wells).difference(set(S_Wells)))
     AGS_Dataset = pd.DataFrame()
     for well in inter:
-        print(well)
         AGS_well = AcoustGamma[AcoustGamma["wellName"] == well]
         AGS_well = pd.merge(AGS_well, Strenght[Strenght["S_wellName"] == well],
                             how="outer", left_on="AG_Depth", right_on="S_Глубина отбора по бурению, м", )
@@ -99,18 +96,13 @@ def acoustgamma_strength_merge():
     for well in AGdiff:
         AGS_well = AcoustGamma[AcoustGamma["wellName"] == well]
         AGS_Dataset = pd.concat([AGS_Dataset, AGS_well])
-
     AGS_Dataset.reset_index(inplace=True, drop=True)
     wellNull = AGS_Dataset.loc[AGS_Dataset["wellName"].isna()].index
     AGS_Dataset.loc[wellNull, "wellName"] = AGS_Dataset.loc[wellNull, "S_wellName"]
     AGS_Dataset.drop(columns=["S_wellName"], inplace=True)
-    print(AGS_Dataset.groupby("wellName").describe())
-    print(AGS_Dataset.info())
-    AGS_Dataset.to_excel("AcoustGammaStrengthDataset.xlsx", index=False)
 
     return AGS_Dataset
 
-acoustgamma_strength_merge()
 
 def acgamstr_mech_merge():
     AcGamStr = pd.read_excel("AcoustGammaStrengthDataset.xlsx")
@@ -121,7 +113,6 @@ def acgamstr_mech_merge():
     AGdiff = list(set(AGS_Wells).difference(set(M_Wells)))
     AGSM_Dataset = pd.DataFrame()
     for well in inter:
-        print(well)
         AGSM_well = AcGamStr[AcGamStr["wellName"] == well]
         AGSM_well = pd.merge(AGSM_well, Mech[Mech["M_wellName"] == well],
                             how="outer", left_on="G_Глубина отбора по ГИС, м", right_on="M_Глубина отбора по ГИС, м", )
@@ -129,18 +120,39 @@ def acgamstr_mech_merge():
     for well in AGdiff:
         AGSM_well = AcGamStr[AcGamStr["wellName"] == well]
         AGSM_Dataset = pd.concat([AGSM_Dataset, AGSM_well])
-
     AGSM_Dataset.reset_index(inplace=True, drop=True)
-    # wellNull = AGS_Dataset.loc[AGS_Dataset["wellName"].isna()].index
-    # AGS_Dataset.loc[wellNull, "wellName"] = AGS_Dataset.loc[wellNull, "S_wellName"]
-    # AGS_Dataset.drop(columns=["index"], inplace=True)
-    # print(AGSM_Dataset.groupby("wellName").describe())
     wellNull = AGSM_Dataset.loc[AGSM_Dataset["wellName"].isna()].index
     AGSM_Dataset.loc[wellNull, "wellName"] = AGSM_Dataset.loc[wellNull, "M_wellName"]
     AGSM_Dataset.drop(columns=["M_wellName"], inplace=True)
-    print(AGSM_Dataset.groupby("wellName").describe())
-    AGSM_Dataset.to_excel("FullKern.xlsx", index=False)
 
     return AGSM_Dataset
 
-acgamstr_mech_merge()
+
+def full_kern_data():
+    Acoustic = acmechgam_parser.acoustic_full()
+    Acoustic.to_excel("AcousticDataset.xlsx", index=False)
+    print("Датасет по акустике создан")
+
+    Gamma = acmechgam_parser.gamma_full()
+    Gamma.to_excel("GammaDataset.xlsx", index=False)
+    print("Датасет по гамме создан")
+
+    Strength = strength_parser.str_full()
+    Strength.to_excel("StrengthDataset.xlsx", index=False)
+    print("Датасет по прочности создан")
+
+    Mech = acmechgam_parser.mech_full()
+    Mech.to_excel("MechDataset.xlsx", index=False)
+    print("Датасет по механике создан")
+
+    AG_Dataset = acoustic_gamma_merge()
+    AG_Dataset.to_excel("AcoustGammaDataset.xlsx", index=False)
+    print("Объединение акустики с гаммой прошло успешно")
+
+    AGS_Dataset = acoustgamma_strength_merge()
+    AGS_Dataset.to_excel("AcoustGammaStrengthDataset.xlsx", index=False)
+    print("Объединение акустики и гаммы с прочностью прошло успешно")
+
+    AGSM_Dataset = acgamstr_mech_merge()
+    AGSM_Dataset.to_excel("FullKern.xlsx", index=False)
+    print("Объединение акустики, гаммы и прочности с механикой прошло успешно")

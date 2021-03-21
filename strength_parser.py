@@ -610,8 +610,3 @@ def str_full():
     DatasetStr.dropna(axis="columns", how="all", inplace=True)
     DatasetStr["S_Глубина отбора по бурению, м"] = DatasetStr["S_Глубина отбора по бурению, м"].round(1)
     return DatasetStr
-
-# Создаёт объединенный датафрейм прочности
-Strength = str_full()
-Strength.to_excel("StrengthDataset.xlsx", index = False)
-print("Датасет по прочности создан")
