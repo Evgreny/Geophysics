@@ -104,7 +104,7 @@ def acoustgamma_strength_merge():
     return AGS_Dataset
 
 
-def acgamstr_mech_merge():
+def acgamstr_mech_merge_combined(connect):
     AcGamStr = pd.read_excel("AcoustGammaStrengthDataset.xlsx")
     Mech = pd.read_excel("MechDataset.xlsx")
     AGS_Wells = AcGamStr["wellName"].unique()
@@ -112,14 +112,46 @@ def acgamstr_mech_merge():
     inter = list(set(AGS_Wells).intersection(set(M_Wells)))
     AGdiff = list(set(AGS_Wells).difference(set(M_Wells)))
     AGSM_Dataset = pd.DataFrame()
-    for well in inter:
-        AGSM_well = AcGamStr[AcGamStr["wellName"] == well]
-        AGSM_well = pd.merge(AGSM_well, Mech[Mech["M_wellName"] == well],
-                            how="outer", left_on="G_Глубина отбора по ГИС, м", right_on="M_Глубина отбора по ГИС, м", )
-        AGSM_Dataset = pd.concat([AGSM_Dataset, AGSM_well])
-    for well in AGdiff:
-        AGSM_well = AcGamStr[AcGamStr["wellName"] == well]
-        AGSM_Dataset = pd.concat([AGSM_Dataset, AGSM_well])
+    if connect == "Dec":
+        for well in inter:
+            AGSM_well = AcGamStr[AcGamStr["wellName"] == well]
+            AGSM_well = AGSM_well.assign(G_round=AGSM_well["G_Глубина отбора по ГИС, м"])
+            Mech_well = Mech[Mech["M_wellName"] == well]
+            Mech_well = Mech_well.assign(M_round=Mech_well["M_Глубина отбора по ГИС, м"])
+            AGSM_well = pd.merge(AGSM_well, Mech_well,
+                                 how="outer", left_on="G_round", right_on="M_round", )
+            AGSM_Dataset = pd.concat([AGSM_Dataset, AGSM_well])
+        for well in AGdiff:
+            AGSM_well = AcGamStr[AcGamStr["wellName"] == well]
+            AGSM_Dataset = pd.concat([AGSM_Dataset, AGSM_well])
+    elif connect == "One":
+        for well in inter:
+            AGSM_well = AcGamStr[AcGamStr["wellName"] == well]
+            AGSM_well = AGSM_well.assign(G_round=AGSM_well["G_Глубина отбора по ГИС, м"].round(0))
+            Mech_well = Mech[Mech["M_wellName"] == well]
+            Mech_well = Mech_well.assign(M_round=Mech_well["M_Глубина отбора по ГИС, м"].round(0))
+            AGSM_well = pd.merge(AGSM_well, Mech_well,
+                                 how="outer", left_on="G_round", right_on="M_round", )
+            AGSM_Dataset = pd.concat([AGSM_Dataset, AGSM_well])
+        for well in AGdiff:
+            AGSM_well = AcGamStr[AcGamStr["wellName"] == well]
+            AGSM_Dataset = pd.concat([AGSM_Dataset, AGSM_well])
+    elif connect == "Ten":
+        for well in inter:
+            AGSM_well = AcGamStr[AcGamStr["wellName"] == well]
+            AGSM_index = AGSM_well[AGSM_well["G_Глубина отбора по ГИС, м"].isna() == False].index
+            AGSM_well = AGSM_well.assign(
+                G_round=(AGSM_well.loc[AGSM_index, "G_Глубина отбора по ГИС, м"] / 10).apply(np.floor).astype(int) * 10)
+            Mech_well = Mech[Mech["M_wellName"] == well]
+            Mech_index = Mech_well[Mech_well["M_Глубина отбора по ГИС, м"].isna() == False].index
+            Mech_well = Mech_well.assign(
+                M_round=(Mech_well.loc[Mech_index, "M_Глубина отбора по ГИС, м"] / 10).apply(np.floor).astype(int) * 10)
+            AGSM_well = pd.merge(AGSM_well, Mech_well,
+                                 how="outer", left_on="G_round", right_on="M_round", )
+            AGSM_Dataset = pd.concat([AGSM_Dataset, AGSM_well])
+        for well in AGdiff:
+            AGSM_well = AcGamStr[AcGamStr["wellName"] == well]
+            AGSM_Dataset = pd.concat([AGSM_Dataset, AGSM_well])
     AGSM_Dataset.reset_index(inplace=True, drop=True)
     wellNull = AGSM_Dataset.loc[AGSM_Dataset["wellName"].isna()].index
     AGSM_Dataset.loc[wellNull, "wellName"] = AGSM_Dataset.loc[wellNull, "M_wellName"]
@@ -153,6 +185,41 @@ def full_kern_data():
     AGS_Dataset.to_excel("AcoustGammaStrengthDataset.xlsx", index=False)
     print("Объединение акустики и гаммы с прочностью прошло успешно")
 
-    AGSM_Dataset = acgamstr_mech_merge()
+    AGSM_Dataset = acgamstr_mech_merge_combined(connect="Dec")
     AGSM_Dataset.to_excel("FullKern.xlsx", index=False)
     print("Объединение акустики, гаммы и прочности с механикой прошло успешно")
+
+def full_kern_fast():
+    Acoustic = acmechgam_parser.acoustic_full()
+    print("Датасет по акустике создан")
+
+    Gamma = acmechgam_parser.gamma_full()
+    print("Датасет по гамме создан")
+
+    Strength = strength_parser.str_full()
+    print("Датасет по прочности создан")
+
+    Mech = acmechgam_parser.mech_full()
+    print("Датасет по механике создан")
+
+    AG_Dataset = acoustic_gamma_merge()
+    AG_Dataset.to_excel("AcoustGammaDataset.xlsx", index=False)
+    print("Объединение акустики с гаммой прошло успешно")
+
+    AGS_Dataset = acoustgamma_strength_merge()
+    AGS_Dataset.to_excel("AcoustGammaStrengthDataset.xlsx", index=False)
+    print("Объединение акустики и гаммы с прочностью прошло успешно")
+
+    AGSM_Dataset = acgamstr_mech_merge_combined(connect="Dec")
+    AGSM_Dataset.to_excel("FullKern.xlsx", index=False)
+    print("Объединение акустики, гаммы и прочности с механикой прошло успешно")
+
+
+# AGSM_Dataset = acgamstr_mech_merge_new()
+# AGSM_Dataset.to_excel("FullKernMyNew.xlsx", index=False)
+# print("Объединение акустики, гаммы и прочности с механикой прошло успешно")
+
+
+AGSM_Dataset = acgamstr_mech_merge_combined("Ten")
+AGSM_Dataset.to_excel("FullKernTen.xlsx", index=False)
+print("Объединение акустики, гаммы и прочности с механикой прошло успешно")

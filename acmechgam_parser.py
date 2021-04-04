@@ -371,5 +371,5 @@ def mech_full():
             print(f"В папке {skv} механика не взялась")
 
     DatasetMech["M_Глубина отбора по ГИС, м"] = DatasetMech["M_Глубина отбора по ГИС, м"].round(1)
-
+    DatasetMech.reset_index(inplace=True, drop=True)
     return DatasetMech

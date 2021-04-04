@@ -5,7 +5,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/acmechgam_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/acmechgam_parser.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/full_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/full_parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/strength_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/strength_parser.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -27,6 +26,7 @@
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="run.code.analysis.last.selected.profile" value="aDefault" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunDashboard">
@@ -41,7 +41,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.full_parser">
+  <component name="RunManager" selected="Python.Workspace">
     <configuration name="Workspace" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Geophysics" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -149,10 +149,10 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.Workspace" />
         <item itemvalue="Python.full_parser" />
         <item itemvalue="Python.acmechgam_parser" />
         <item itemvalue="Python.strength_parser" />
-        <item itemvalue="Python.Workspace" />
         <item itemvalue="Python.acoustic_parser" />
       </list>
     </recent_temporary>
