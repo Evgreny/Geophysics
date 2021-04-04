@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="4e1f52fb-a691-46d7-b4b3-432b58e6f2f8" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/acmechgam_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/acmechgam_parser.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/full_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/full_parser.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -41,7 +40,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.Workspace">
+  <component name="RunManager" selected="Python.full_parser">
     <configuration name="Workspace" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Geophysics" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -149,8 +148,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.Workspace" />
         <item itemvalue="Python.full_parser" />
+        <item itemvalue="Python.Workspace" />
         <item itemvalue="Python.acmechgam_parser" />
         <item itemvalue="Python.strength_parser" />
         <item itemvalue="Python.acoustic_parser" />
