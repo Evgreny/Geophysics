@@ -1,7 +1,8 @@
 import xlrd
 import numpy as np
 import pandas as pd
-import sklearn
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import OneHotEncoder
 
 pd.set_option("display.max_columns", 101)
 pd.options.display.max_columns = 999
@@ -114,13 +115,27 @@ def gamma_data(FileName):
 
     return DataLearn
 
-def litology(spis):
-    res = spis[0]+" "+spis[1]
+def litology(name):
+    res = name[0] + " " + name[1]
     return res
 
 def dataset_former(FileName):
     Data = pd.read_excel(FileName)
-    a = Data["A_Краткая литологическая характеристика"]
-    b = a.str.split(" ").apply(litology)
-    c = b.str.replace(",", "")
-    print(c.unique())
+    Data["A_Краткая литологическая характеристика"] = Data["A_Краткая литологическая характеристика"].str.split(" ").apply(litology)
+    Data["A_Краткая литологическая характеристика"] = Data["A_Краткая литологическая характеристика"].str.replace(",", "")
+    RareLit = ["Переслаивание алевролита", "Тонкое переслаивание", "Алевролит мелко-крупнозернистый",
+               "Алевролит глинистый", "Глина аргиллитоподобная", "Аргиллит опесчаненный", "Аргиллит алевритистый"]
+    for word in RareLit:
+        Data["A_Краткая литологическая характеристика"] = Data["A_Краткая литологическая характеристика"].replace(word, "Rare")
+    encoder = OneHotEncoder(sparse=False)
+
+    # Data["A_Краткая литологическая характеристика"].value_counts().plot.barh()
+    # plt.show()
+
+    LitEncoder = pd.DataFrame(encoder.fit_transform(Data[["A_Краткая литологическая характеристика"]]))
+    Data = Data.join(LitEncoder)
+    Data.drop("A_Краткая литологическая характеристика", 1, inplace=True)
+    return Data
+
+
+dataset_former("AcousticLearn.xlsx")
