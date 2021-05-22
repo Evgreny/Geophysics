@@ -536,9 +536,11 @@ def dataset_former_gamma(FileName, Param):
     elif Param == "A_YME":
         modelRF = RandomForestRegressor(bootstrap=True, max_depth=10, max_features="auto", min_samples_leaf=1, min_samples_split=4, n_estimators=100, random_state=7)  # A_YME
         modelKNN = KNeighborsRegressor(n_neighbors=7, n_jobs=-1)
+        modelXGB = xgboost.XGBRegressor(colsample_bytree=1, gamma=0.2, learning_rate=0.1, max_depth=3, min_child_weight=0, n_estimators=100, reg_alpha=0.75, reg_lambda=None, subsample=None)
     elif Param == "A_PR":
         modelRF = RandomForestRegressor(bootstrap=True, max_depth=8, max_features="sqrt", min_samples_leaf=6, min_samples_split=8, n_estimators=100, random_state=7) # A_PR
         modelKNN = KNeighborsRegressor(n_neighbors=18, n_jobs=-1)
+        modelXGB = xgboost.XGBRegressor(colsample_bytree=0.9, gamma=0, learning_rate=0.1, max_depth=3, min_child_weight=12, n_estimators=50, reg_alpha=None, reg_lambda=None, subsample=None)
     elif Param == "M_YME":
         modelRF = RandomForestRegressor(bootstrap=True, max_depth=6, max_features="auto", min_samples_leaf=1, min_samples_split=5, n_estimators=50, random_state=7)  # M_YME
         modelKNN = KNeighborsRegressor(n_neighbors=1, n_jobs=-1)
@@ -581,7 +583,7 @@ def dataset_former_gamma(FileName, Param):
     #    'min_child_weight':[0,1,5,15],
     #    'learning_rate':[0.1, 0.3],
     #    'max_depth':[3,4,5],
-    #    'n_estimators':[200],
+    #    'n_estimators':[100],
     #    'reg_alpha':[1e-5, 0.75, None],
     #    'reg_lambda':[1e-5, 0.45, None],
     #    'subsample':[0.04, 0.6, 0.95]}
@@ -590,60 +592,63 @@ def dataset_former_gamma(FileName, Param):
     # {'colsample_bytree': 0.4, 'gamma': 0.01, 'learning_rate': 0.3, 'max_depth': 3, 'min_child_weight': 15, 'n_estimators': 200, 'reg_alpha': None, 'reg_lambda': 1e-05, 'subsample': 0.6} FANG
     # {'colsample_bytree': 0.4, 'gamma': 0.01, 'learning_rate': 0.1, 'max_depth': 3, 'min_child_weight': 5, 'n_estimators': 200, 'reg_alpha': 0.75, 'reg_lambda': None, 'subsample': 0.04} M_YME
     # {'colsample_bytree': 0.4, 'gamma': 0.01, 'learning_rate': 0.3, 'max_depth': 3, 'min_child_weight': 0, 'n_estimators': 200, 'reg_alpha': 1e-05, 'reg_lambda': 1e-05, 'subsample': 0.04} M_PR
-    # model = xgboost.XGBRegressor(colsample_bytree=0.8, gamma=0.01, learning_rate=0.3, max_depth=2, min_child_weight=0, n_estimators=100, reg_alpha=0.85, reg_lambda=0.85, subsample=1)
+    # {'colsample_bytree': 0.8, 'gamma': 0.01, 'learning_rate': 0.1, 'max_depth': 4, 'min_child_weight': 0, 'n_estimators': 200, 'reg_alpha': 0.75, 'reg_lambda': None, 'subsample': 0.04} A_YME
+    # {'colsample_bytree': 0.4, 'gamma': 0.01, 'learning_rate': 0.1, 'max_depth': 3, 'min_child_weight': 5, 'n_estimators': 100, 'reg_alpha': None, 'reg_lambda': 1e-05, 'subsample': 0.04} A_PR
+    # model = xgboost.XGBRegressor(colsample_bytree=0.9, gamma=0, learning_rate=0.1, max_depth=3, min_child_weight=12, n_estimators=50, reg_alpha=None, reg_lambda=None, subsample=None)
+    # model = xgboost.XGBRegressor()
     # grid = GridSearchCV(model, xgboost_grid, n_jobs=-1, cv=5)
     # grid.fit(X, y)
-    # return grid.best_params_
+    # print(grid.best_params_)
 
 
     # LeaveOneOut for one model
-    loo = LeaveOneOut()
-    loo.get_n_splits(X)
-    Prediction = []
-    for train_index, test_index in loo.split(X):
-        X_train, X_test = X.iloc[train_index, :], X.iloc[test_index,:]
-        y_train, y_test = y[train_index], y[test_index]
-        model.fit(X_train, y_train)
-        pre = model.predict(X_test)[0]
-        print(pre)
-        print(y[test_index[0]])
-        print("-------")
-        Prediction.append(pre)
-    pred = pd.Series(Prediction)
-    SST = sum((y - y.mean())**2)
-    SSE = sum((pred - y)**2)
-    print("LLO", 1-SSE/SST)
-
-    # LeaveOneOut for bagging
     # loo = LeaveOneOut()
     # loo.get_n_splits(X)
     # Prediction = []
     # for train_index, test_index in loo.split(X):
-    #     X_train, X_test = X.iloc[train_index, :], X.iloc[test_index, :]
+    #     X_train, X_test = X.iloc[train_index, :], X.iloc[test_index,:]
     #     y_train, y_test = y[train_index], y[test_index]
+    #     model.fit(X_train, y_train)
+    #     pre = model.predict(X_test)[0]
+    #     print(pre)
+    #     print(y[test_index[0]])
+    #     print("-------")
+    #     Prediction.append(pre)
+    # pred = pd.Series(Prediction)
+    # SST = sum((y - y.mean())**2)
+    # SSE = sum((pred - y)**2)
+    # print("LLO", 1-SSE/SST)
+
+    # LeaveOneOut for bagging
+    loo = LeaveOneOut()
+    loo.get_n_splits(X)
+    Prediction = []
+    for train_index, test_index in loo.split(X):
+        X_train, X_test = X.iloc[train_index, :], X.iloc[test_index, :]
+        y_train, y_test = y[train_index], y[test_index]
     # #
-    #     modelLR.fit(X_train, y_train)
-    #     exampleLR = modelLR.predict(X_test)[0]
+        modelLR.fit(X_train, y_train)
+        exampleLR = modelLR.predict(X_test)[0]
     # #
     #     modelRF.fit(X_train, y_train)
     #     exampleRF = modelRF.predict(X_test)[0]
     # #
-    #     modelXGB.fit(X_train, y_train)
-    #     exampleXGB = modelXGB.predict(X_test)[0]
+        modelXGB.fit(X_train, y_train)
+        exampleXGB = modelXGB.predict(X_test)[0]
     # #     #
-    #     modelKNN.fit(X_train, y_train)
-    #     exampleKNN = modelKNN.predict(X_test)[0]
+        modelKNN.fit(X_train, y_train)
+        exampleKNN = modelKNN.predict(X_test)[0]
     # #
     # #     modelCAT.fit(X_train, y_train)
     # #     exampleCAT = modelCAT.predict(X_test)[0]
     # #
-    #     Mean = (exampleLR + exampleRF + exampleKNN)/3
-    #     print(Mean)
-    #     Prediction.append(Mean)
-    # pred = pd.Series(Prediction)
-    # SST = sum((y - y.mean()) ** 2)
-    # SSE = sum((pred - y) ** 2)
-    # print("LLO", 1 - SSE / SST)
+        Mean = (exampleKNN+exampleXGB+exampleLR)/3
+        print(Mean)
+        Prediction.append(Mean)
+    pred = pd.Series(Prediction)
+    SST = sum((y - y.mean()) ** 2)
+    SSE = sum((pred - y) ** 2)
+    print("LLO", 1 - SSE / SST)
 
 
     # LeaveOneOut for boosting1
@@ -746,7 +751,7 @@ def dataset_former_gamma(FileName, Param):
 # dataset_former_acoustic("AcousticLearn.xlsx", "A_PR")
 
 
-dataset_former_gamma("GammaLearnNew.xlsx", "UCS")
+dataset_former_gamma("GammaLearnNew.xlsx", "TSTR")
 # b = dataset_former_gamma("GammaLearnNew.xlsx", "TSTR")
 # c = dataset_former_gamma("GammaLearnNew.xlsx", "FANG")
 # d = dataset_former_gamma("GammaLearnNew.xlsx", "A_YME")

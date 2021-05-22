@@ -186,4 +186,27 @@ def full_kern_data(fullsave):
         AGS_Dataset.to_excel("AcoustGammaStrengthDataset.xlsx", index=False)
         print("Промежуточные датасеты сохранены")
 
-full_kern_data(fullsave=True)
+def GIS_kern(GIS, FullKern, full = False):
+    GIS.drop(0, 0, inplace=True)
+    GISwells = GIS.pop("wellName")
+    GIS.drop("datasetName", 1, inplace=True)
+    GIS = GIS.applymap(lambda x: str(x).replace(",", "."))
+    GIS = GIS.astype("float")
+    wellnames = pd.read_excel("true_data.xlsx")
+    GISwells.replace(list(wellnames["new_name well"]), list(wellnames["old_name well"]), inplace=True)
+    GIS["wellName"] = GISwells
+    if full == False:
+        FullKern = FullKern[["S_UCS Предел прочности на сжатие, Мпа", "S_TSTR Предел прочности на растяжение, Мпа",
+         "S_Коэффициент внутреннего трения, tgφ, отн. ед.", "M_Статический Коэфф. Пуассона",
+         "M_Статический Модуль Юнга, ГПа", "A_Динамический Коэфф. Пуассона", "A_Динамический Модуль Юнга, Гпа", "wellName", "G_Глубина отбора по ГИС, м"]]
+    GISkern = pd.merge(GIS, FullKern, how = "outer", left_on=["wellName", "DEPT"], right_on=["wellName", "G_Глубина отбора по ГИС, м"])
+    return GISkern
+
+# GISdataset = pd.read_csv("GIS.csv", sep=";", na_values=[-9999], low_memory=False)
+# kerndataset = pd.read_excel("FullKern.xlsx")
+# GIS_kern(GISdataset, kerndataset, full=False).to_csv("GISKern.csv", index=False)
+
+# Data = pd.read_csv("GISKern.csv", low_memory=False)
+# print(Data[(pd.isna(Data["S_UCS Предел прочности на сжатие, Мпа"]) == False)])
+
+# full_kern_data(fullsave=True)
